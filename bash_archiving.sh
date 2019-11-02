@@ -23,8 +23,7 @@ then
 					for i in $line
 					do
 						folder=$(cut -c 2- 2>/dev/null <<< "$i" | tr -d '\n')
-
-						date=$( date +"_%d_%m_%y-%H_%M_%S" )
+						printf -v date "%(_%d_%m_%y-%H_%M_%S)T" -1
 
 						if [[ $(find /$folder/ -type f -user $1 2>/dev/null) ]]
 						then
@@ -54,14 +53,14 @@ then
 		then
 			if [[ "$2" =~ [0-9]*hours ]]
 			then
-				minutes=$( echo $2 | grep -o '[0-9]*' )
+				minutes=$(grep -o '[0-9]*' <<< "$2")
 				minutes=$(($minutes * 60))
 			elif [[ "$2" =~ [0-9]*days ]]
 			then
-				minutes=$( echo $2 | grep -o '[0-9]*' )
+				minutes=$(grep -o '[0-9]*' <<< "$2")
 				minutes=$(($minutes * 1440)) #minutes in day
 			else
-				minutes=$( echo $2 | grep -o '[0-9]*' )
+				minutes=$(grep -o '[0-9]*' <<< "$2")
 			fi
 
 			for (( index=1; index <= $countUSERS; index++))
@@ -117,7 +116,7 @@ else
 		username: required
 
 	EOF
-	
+
 	exit 2
 fi
 
