@@ -9,7 +9,24 @@ then
 	then
 		for (( index=1; index <= $countUSERS; index++))
 		do
-			word=$(sed 's/\(^[a-zA-Z0-9]*\).*/\1/g' /etc/passwd | tr '\n' ' ' | cut -d " " -f $index)
+			word="$(
+				awk -v I=$index '
+					BEGIN{
+						FS=":"
+						B=1
+					}
+
+					{
+						if($1~/^[[:alnum:]]+$/){
+							A[B++]=$1
+						}
+					}
+
+					END{
+						printf("%s ", A[I])
+					}
+				' /etc/passwd
+			)"
 
 			if [ "$1" == "$word" ]
 			then
