@@ -1,1 +1,1 @@
-/etc : /usr : /var/log      : /bin:/opt  
+/etc : /usr : /var/log      : /bin:/opt  : /bin:/tmp
