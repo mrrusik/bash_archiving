@@ -1,6 +1,24 @@
 #!/bin/bash
-USERS=$(sed 's/\(^[a-zA-Z0-9]*\).*/\1/g' /etc/passwd | tr '\n' ' ')
-countUSERS=$(wc -l < /etc/passwd)
+
+UserData=$(
+	awk -F ':' '
+		$1 ~ /^[[:alnum:]]+$/ && ! /^#/ {
+			N++; U[$1]=$1
+		}
+
+		END{
+			printf("%s|", N)
+
+			for(I in U){
+				printf("%s ", U[I])
+			}
+		}
+	' /etc/passwd
+)
+
+USERS=${UserData#*|}
+
+countUSERS=${UserData%%|*}
 x=0 #Заглушка. проверка наличие юзера
 
 if (($# ==  1 ||  $# == 2))
@@ -10,9 +28,8 @@ then
 		for (( index=1; index <= $countUSERS; index++))
 		do
 			word="$(
-				awk -v I=$index '
+				awk -v I=$index -F ':' '
 					BEGIN{
-						FS=":"
 						B=1
 					}
 
@@ -34,7 +51,7 @@ then
 
 				while read line
 				do
-					line=$(sed 's/ *//g' <<< "$line")
+					line=${line// }
 
 					IFS=:
 					for i in $line
@@ -47,7 +64,7 @@ then
 							mkdir -p "$1_$folder"
 							sudo find /$folder/ -type f -user $1 -exec cp -rp {} "$1_$folder"/ 2>/dev/null \;
 							tar -czf "$1_$folder$date.tgz" "$1_$folder"/
-							echo -e "\n$folder.tgz contain this files:\n"
+							printf "\n$folder.tgz contain this files:\n\n"
 							tar -ztvf "$1_$folder$date.tgz"
 							rm -rf "$1_$folder" 2>/dev/null
 						else
@@ -60,7 +77,7 @@ then
 
 		if [ "${x}" == 0 ] && [ "$1" != "$word" ]
 		then
-			echo "User $1 don't exist"
+			printf "User $1 don't exist\n"
 			x=0
 			exit 2
 		fi
@@ -89,7 +106,7 @@ then
 					x=1 #user founded
 					while read line
 					do
-						line=$(sed 's/ *//g' <<< "$line")
+						line=${line// }
 
 						IFS=:
 						for i in $line
@@ -102,7 +119,7 @@ then
 								mkdir -p "$1_$folder"
 								sudo find /$folder/ -type f -user $1 -amin "-$minutes" -exec cp -rp {} "$1_$folder"/ 2>/dev/null \;
 								tar -czf "$1_$folder$date.tgz" "$1_$folder"/
-								echo -e "\n$folder.tgz contain this files:\n"
+								printf "\n$folder.tgz contain this files:\n\n"
 								tar -ztvf "$1_$folder$date.tgz" 2>/dev/null
 								rm -rf "$1_$folder"
 							else
@@ -115,16 +132,18 @@ then
 
 			if [ "${x}" == 0 ] && [ "$1" != "$word" ]
 			then
-				echo "User $1 don't exist"
+				printf "User $1 don't exist\n"
 				x=0
 				exit 2
 			fi
 		else
-			echo "Invalid period prefix"
+			printf "Invalid period prefix\n"
 		fi
 	fi
 else
-	cat <<-EOF
+	white read; do
+		printf '%s\n' "$REPLY"
+	done <<-EOF
 
 		Usage: ${0##*/} username period
 		username: required
@@ -136,6 +155,4 @@ else
 
 	exit 2
 fi
-
-
 
